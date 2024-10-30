@@ -1,9 +1,12 @@
 `timescale 1ns/1ps
 
 module washing_machine_tb;
-    // Inputs
+    
+    // Clock and reset
     reg clk;
     reg reset;
+    
+    // Inputs
     reg start;
     reg door_locked;
     reg fill_done;
@@ -14,9 +17,9 @@ module washing_machine_tb;
     reg dry_done;
     reg pause;
     reg resume;
-    reg [1:0] temp_select;     // 2'b00 = Cold, 2'b01 = Warm, 2'b10 = Hot
-    reg [1:0] cloth_type;      // 2'b00 = Cotton, 2'b01 = others
-    reg [1:0] cycle_duration;  // 2'b00 = 30 min, 2'b01 = 45 min, 2'b10 = 60 min
+    reg [1:0] temp_select;
+    reg [1:0] cloth_type;
+    reg [1:0] cycle_duration;
 
     // Outputs
     wire lock_door;
@@ -26,8 +29,8 @@ module washing_machine_tb;
     wire spin;
     wire drain;
     wire dry;
-
-    // Instantiate the module under test
+    
+    // Instantiate the washing_machine module
     washing_machine uut (
         .clk(clk),
         .reset(reset),
@@ -53,15 +56,12 @@ module washing_machine_tb;
         .dry(dry)
     );
 
-    // Clock generation
-    initial begin
-        clk = 0;
-        forever #5 clk = ~clk;  // 10ns clock period
-    end
+    // Clock Generation
+    always #5 clk = ~clk;
 
-    // Test sequence
     initial begin
-        // Initialize inputs
+        // Initial Conditions
+        clk = 0;
         reset = 1;
         start = 0;
         door_locked = 0;
@@ -73,75 +73,36 @@ module washing_machine_tb;
         dry_done = 0;
         pause = 0;
         resume = 0;
-        temp_select = 2'b00;       // Cold
-        cloth_type = 2'b00;        // Cotton
-        cycle_duration = 2'b01;    // 45 min
-
-        // Reset pulse
+        temp_select = 2'b00;      // Default Cold
+        cloth_type = 2'b00;       // Default Cotton
+        cycle_duration = 2'b00;   // Default 30 min
+        
+        // Reset and start the machine
         #10 reset = 0;
-        #10 reset = 1;
-        #10 reset = 0;
-
-        // Start washing cycle
         #10 start = 1;
-        #10 start = 0;
-
-        // Door lock simulation
-        #20 door_locked = 1;
-        #10 door_locked = 0;
-
-        // Filling water
-        #10 fill_done = 1;
-        #10 fill_done = 0;
-
-        // Washing
-        #10 wash_done = 1;
-        #10 wash_done = 0;
-
-        // Rinsing
-        #10 rinse_done = 1;
-        #10 rinse_done = 0;
-
-        // Spinning
-        #10 spin_done = 1;
-        #10 spin_done = 0;
-
-        // Draining
-        #10 drain_done = 1;
-        #10 drain_done = 0;
-
-        // Drying
-        #10 dry_done = 1;
-        #10 dry_done = 0;
-
-        // Cycle Complete
-        #20;
-
-        // Test pause and resume functionality
-        #10 start = 1;
-        #10 start = 0;
-        #10 door_locked = 1;
-        #10 fill_done = 1;
-        #10 wash_done = 1;
-
-        // Pause during rinse
-        #10 pause = 1;
-        #10 pause = 0;
-
-        // Resume
-        #10 resume = 1;
-        #10 resume = 0;
-
-        // Complete the cycle
-        rinse_done = 1;
-        #10 rinse_done = 0;
-        #10 spin_done = 1;
-        #10 spin_done = 0;
-        #10 drain_done = 1;
-        #10 drain_done = 0;
-        #10 dry_done = 1;
-        #10 dry_done = 0;
-
-        #20 $stop;  // End of simulation
+        #10 door_locked = 1;      // Lock the door
+        
+        // Simulate the wash cycle steps
+        #20 fill_done = 1;        // Fill complete
+        #20 fill_done = 0;        // Reset fill_done
+        #20 wash_done = 1;        // Wash complete
+        #20 wash_done = 0;        // Reset wash_done
+        #20 rinse_done = 1;       // Rinse complete
+        #20 rinse_done = 0;       // Reset rinse_done
+        #20 spin_done = 1;        // Spin complete
+        #20 spin_done = 0;        // Reset spin_done
+        #20 drain_done = 1;       // Drain complete
+        #20 drain_done = 0;       // Reset drain_done
+        #20 dry_done = 1;         // Dry complete
+        #20 dry_done = 0;         // Reset dry_done
+        
+        // Test Pause and Resume in between cycle
+        #20 pause = 1;
+        #10 pause = 0;            // Simulate pausing
+        
+        #10 resume = 1;           // Resume the cycle
+        #10 resume = 0;           // Clear resume
+        
+        #20 $stop;                // End simulation
     end
 endmodule

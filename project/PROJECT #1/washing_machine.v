@@ -43,6 +43,7 @@ module washing_machine (
     parameter CONTINUE    = 4'b1011;
 
     reg [3:0] current_state, next_state;
+    reg [3:0] previous_state;
 
 
     always @(posedge clk or posedge reset)begin
@@ -75,53 +76,88 @@ end
             if(door_locked)
                 next_state = LOCK_DOOR;
             lock_door = 1;
+            if (pause) begin
+                    previous_state = SELECT;
+                    next_state = PAUSE;
+                end
         end
 
         LOCK_DOOR : begin
             // lock_door = 1;
             if(door_locked)
                 next_state = FILL;
+            if (pause) begin
+                previous_state = LOCK_DOOR;
+                next_state = PAUSE;
+            end
         end
 
         FILL : begin
         fill_water = 1;
             if(fill_done)
                 next_state = WASH;
+            if (pause) begin
+                previous_state = FILL;
+                next_state = PAUSE;
+            end
         end
 
         WASH : begin
         wash = 1;
             if(wash_done)
                 next_state = RINSE;
+            if (pause) begin
+                previous_state = WASH;
+                next_state = PAUSE;
+            end
         end
 
         RINSE : begin
         rinse = 1;
             if(rinse_done)
                 next_state = SPIN;
+            if (pause) begin
+                previous_state = RINSE;
+                next_state = PAUSE;
+            end
         end
 
         SPIN : begin
         spin = 1;
             if(spin_done) 
                 next_state = DRAIN;
+            if (pause) begin
+                    previous_state = SPIN;
+                    next_state = PAUSE;
+            end
         end
 
         DRAIN : begin
         drain = 1;
-        // if(drain_done)
-        //     next_state = DRY;
+        if (drain_done)
             next_state = DRY;
+        if (pause) begin
+            previous_state = DRAIN;
+            next_state = PAUSE;
+            end
         end
 
         DRY : begin
         dry = 1;
             if(dry_done)
                 next_state = COMPLETE;
+            if (pause) begin
+                previous_state = DRY;
+                next_state = PAUSE;
+            end
         end
 
         COMPLETE : begin
-            next_state = IDLE;
+        next_state = IDLE;
+        if (pause) begin
+            previous_state = COMPLETE;
+            next_state = PAUSE;
+            end
         end
 
 //ADDED STATES LESA NOT IMPLEMENTED
@@ -130,7 +166,7 @@ end
             if (resume) next_state = CONTINUE;
         end
         CONTINUE: begin
-            next_state = current_state; // Continue from where it left off
+            next_state = previous_state; // Continue from where it left off
         end
 
         default: next_state = IDLE;
